@@ -1,15 +1,407 @@
-# 🚀 GCP DevOps CI/CD Pipeline
+# Katonic-Installer
+**Hardware Configurations:**
 
-This repository demonstrates a complete **CI/CD pipeline on Google Cloud** for a Python Flask application using:
+A scalable cluster implementation that is composed of a standard set of master nodes, a set of worker nodes dedicated to hosting Katonic platform services, and a set of worker nodes dedicated to hosting compute workloads. This configuration is designed to achieve superior performance that enables real-time execution of analytics, machine learning (ML), and artificial intelligence (AI) applications in a production pipeline.
 
-- **Cloud Build** for CI/CD automation
-- **Docker** for containerization
-- **Artifact Registry** for image storage
-- **Google Kubernetes Engine (GKE)** for deployment
-- **Kubernetes manifests** for workload definition
+**Katonic on EKS:**
 
----
+Katonic can run on a Kubernetes cluster provided by [AWS Elastic Kubernetes Service.](https://aws.amazon.com/eks/) When running on EKS, the Katonic architecture uses AWS resources to fulfill the Katonic MLOps platform requirements as follows:
 
-## 📁 Project Structure
 
-. ├── Dockerfile # Container setup for Flask app ├── requirements.txt # Python dependencies ├── main.py # Flask application entry point ├── cloudbuild.yaml # CI/CD pipeline configuration └── gke-deploy.yml # Kubernetes Deployment & Service definitions
+* Kubernetes control moves to the EKS control plane with managed Kubernetes masters
+
+* Katonic uses a dedicated Auto Scaling Group (ASG) of EKS workers to host the Katonic platform
+
+* ASGs of EKS workers host elastic compute for Katonic executions
+
+* AWS S3 is used to store entire platform backups.
+
+* AWS EFS is used to store Katonic Datasets
+
+* The kubernetes.io/aws-ebs provisioner is used to create persistent volumes for Katonic executions
+
+* [Calico](https://docs.aws.amazon.com/eks/latest/userguide/calico.html) is used as a network plugin to support [Kubernetes network policies](https://kubernetes.io/docs/concepts/services-networking/network-policies/)
+
+* Katonic cannot be installed on EKS Fargate, since Fargate does not support stateful workloads with persistent volumes.
+
+* Instead of EKS Managed Node groups, Katonic recommends creating custom node groups to allow for additional control and customized Amazon Machine Images. Katonic recommends eksctl, Terraform, or CloudFormation for setting up custom node groups.
+
+**Set up an EKS cluster for Katonic:**
+
+This section describes how to configure an Amazon EKS cluster for use with Katonic. When configuring an EKS cluster for Katonic, you must be familiar with the following AWS services:
+
+* Elastic Kubernetes Service (EKS)
+
+* Identity and Access Management (IAM)
+
+* Virtual Private Cloud (VPC) Networking
+
+* Elastic Block Store (EBS)
+
+* Elastic File System (EFS)
+
+* S3 Object Storage 
+
+Additionally, a basic understanding of Kubernetes concepts like node pools, network CNI, storage classes, autoscaling, and Docker will be useful when deploying the cluster.
+
+Security considerations:
+
+You must create IAM policies in the AWS console to provision an EKS cluster. Katonic recommends following the standard security practice of granting the least privilege when you create IAM policies. Begin with the least privileges and then grant elevated privileges when necessary. See information about the grant least privilege concept.
+
+**IAM permissions for user:**
+
+The list of permissions required for a user in AWS to carry out the installation.
+
+[AmazonEC2FullAccess](https://us-east-1.console.aws.amazon.com/iam/home#/policies/arn%3Aaws%3Aiam%3A%3Aaws%3Apolicy%2FAmazonEC2FullAccess)
+
+[IAMFullAccess](https://us-east-1.console.aws.amazon.com/iam/home#/policies/arn%3Aaws%3Aiam%3A%3Aaws%3Apolicy%2FIAMFullAccess)
+
+[AmazonEKSClusterPolicy](https://us-east-1.console.aws.amazon.com/iam/home#/policies/arn%3Aaws%3Aiam%3A%3Aaws%3Apolicy%2FAmazonEKSClusterPolicy)
+
+[AmazonEKSWorkerNodePolicy](https://us-east-1.console.aws.amazon.com/iam/home#/policies/arn%3Aaws%3Aiam%3A%3Aaws%3Apolicy%2FAmazonEKSWorkerNodePolicy)
+
+[AmazonVPCFullAccess](https://us-east-1.console.aws.amazon.com/iam/home#/policies/arn%3Aaws%3Aiam%3A%3Aaws%3Apolicy%2FAmazonVPCFullAccess)
+
+[AmazonEKSServicePolicy](https://us-east-1.console.aws.amazon.com/iam/home#/policies/arn%3Aaws%3Aiam%3A%3Aaws%3Apolicy%2FAmazonEKSServicePolicy)
+
+[AWSCloudFormationFullAccess](https://us-east-1.console.aws.amazon.com/iam/home#/policies/arn%3Aaws%3Aiam%3A%3Aaws%3Apolicy%2FAWSCloudFormationFullAccess)
+
+Elastic Kubernetes Service(EKS) and Elastic File System(EFS) Full Access.
+Add the following IAM policy and attach it to the user.
+```
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "VisualEditor0",
+            "Effect": "Allow",
+            "Action": [
+                "elasticfilesystem:*",
+                "eks:ListClusters",
+                "eks:DescribeAddonVersions",
+                "eks:*",
+                "eks:CreateCluster"
+            ],
+            "Resource": "*"
+        }
+    ]
+}
+```
+
+**Service quotas:**
+
+Amazon maintains default service quotas for each of the services listed previously. You can check the [default service quotas](https://docs.aws.amazon.com/general/latest/gr/aws-service-information.html) and manage your quotas by logging in to the[ AWS Service Quotas console.](https://console.aws.amazon.com/servicequotas/home)
+
+**Network plugin:**
+
+Katonic relies on [Kubernetes network policies](https://kubernetes.io/docs/concepts/services-networking/network-policies/) to manage secure communication between pods in the cluster. Network policies are implemented by the network plugin, so your cluster uses a networking solution that supports NetworkPolicy, such as Calico.
+
+See the [AWS documentation on installing Calico](https://docs.aws.amazon.com/eks/latest/userguide/calico.html) for your EKS cluster.
+
+**Autoscale access**:
+
+If you intend to deploy the Kubernetes Cluster Autoscaler in your cluster, the instance profile used by your platform nodes must have the[ necessary AWS Auto Scaling permissions.](https://docs.aws.amazon.com/eks/latest/userguide/cluster-autoscaler.html)
+
+
+See the following example policy:
+```
+{
+ "Version": "2012-10-17",
+ "Statement": [
+     {
+         "Action": [
+             "autoscaling:DescribeAutoScalingGroups",
+             "autoscaling:DescribeAutoScalingInstances",
+             "autoscaling:DescribeLaunchConfigurations",
+             "autoscaling:DescribeTags",
+             "autoscaling:SetDesiredCapacity",
+             "autoscaling:TerminateInstanceInAutoScalingGroup",
+             "ec2:DescribeLaunchTemplateVersions",
+             "ec2:DescribeInstanceTypes"
+        ],
+         "Resource": "*",
+         "Effect": "Allow"
+     }
+]
+}
+```
+**Domain:**
+
+Katonic must be configured to serve from a specific FQDN. To serve Katonic securely over HTTPS, you will also need an SSL certificate that covers the chosen name. Record the FQDN for use when installing Katonic.
+
+**AWS Compute-Node Specifications**:
+
+Compute nodes in platform AWS cloud deployments must use one of the following instance types; choose the type that best fits your requirements. AWS Elastic Kubernetes Service (EKS) is also supported for application nodes, using the instance types listed below. For specification details for each type, refer to the AWS documentation.
+
+Note
+
+Supported compute node configurations
+
+* m5.2xlarge (default configuration)
+
+* m5.4xlarge
+
+* m5.8xlarge
+
+* m5.12xlarge
+
+* NCv3-series (GPU optimized)
+
+Additional node pools with distinct katonic.ai/node-pool labels can be added to make other instance types available for Katonic executions.
+
+
+
+**Katonic Platform Installation:**
+
+**Installation process**:
+ 
+The Katonic platform runs on Kubernetes. To simplify the deployment and configuration of Katonic services, Katonic provides an install automation tool called the katonic-installer that will deploy Katonic into your compatible cluster. The katonic-installer is an ansible role delivered in a Docker container and can be run locally.
+
+ 
+**Prerequisites:**
+
+1. To install and configure Katonic in your AWS account you must have:
+
+    quay.io credentials from Katonic.
+
+2. Required: PEM encoded public key certificate for your domain and private key associated with the given certificate.
+
+3. AWS region with enough quota to create:
+
+4. At least 4 m5.2xlarge EC2 machines.
+
+5. p3.2xlarge or similar VMs, if you want to use GPU.
+
+6. A Linux based machine with the following:
+
+    A Linux-based machine having 4GB RAM and 2vcpus. Skip to step b if you already have the machine with the given specifications.
+    TIP: After the platform is deployed successfully, the VM can be deleted.
+
+7. Switch to the root user inside the machine.
+
+    AWS CLI must be installed and logged in to your AWS account using 
+    aws configure command, with a user that has IAM policies required to create resources listed above.
+
+Commands for installing AWS CLI v2.
+```
+  curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+  unzip awscliv2.zip
+  sudo ./aws/install
+```  
+The following are installed:
+  1. [Kubectl](https://kubernetes.io/docs/tasks/tools/install-kubectl-linux/)
+  2. [Docker](https://docs.docker.com/engine/install/)
+
+
+The Katonic Installer can deploy the Katonic MLOps platform in two ways:
+
+   1. Creating EKS and deploying Katonic MLOps Platform
+
+   2. Deploying Katonic MLOps platform on existing EKS(requirements must be satisfied)
+
+**1. Install Katonic Platform with AWS Elastic Kubernetes Service**
+
+ 1. Log in to Quay with the credentials described in the requirements section above.
+ ```
+ docker login quay.io
+ ```              
+ 2. Retrieve the Katonic installer image from Quay .
+ ```       
+ docker pull quay.io/katonic/katonic-installer:v3.1
+```         
+ 3. Create a directory.
+ ```      
+ mkdir katonic
+ cd katonic
+ ```
+4. Put the PEM encoded public key certificate (having extension .crt) for your domain and private key associated with the given certificate(having extension .key) inside the current directory(katonic).
+
+5. Initialize the installer application to generate a template configuration file named katonic.yml.
+```        
+docker run -it --rm --name generating-yaml -v $(pwd):/install quay.io/katonic/katonic-installer:v3.2 init aws
+```
+        
+        
+Edit the configuration file with all necessary details about the target cluster, storage systems, and hosting domain. Read the following configuration reference:        
+|     Parameter         |     Description         |     Value      |
+|-----------------------|-------------------------|----------------|      
+| 1. deployment_type    | Katonic MLOps platform can be installed in either POC or Operational(HA) mode|  POC or Operational
+|                       |                            
+| 2. create_k8s_cluster |create EKS or not. Must be set False if EKS is already deployed     | True or False |
+| 3. aws_region | AWS region name | eg. us-east-1 |
+| 4. kubernetes_distribution | Distribution of Kubernetes |  	has to be kubernetes |
+| 5. platform_nodes.instance_type | Platform node VM size | eg. m5.xlarge |
+| 6. platform_nodes.min_count | Minimum number of platform nodes |eg. 2 |
+| 7. platform_nodes.max_count | Maximum number of platform nodes |eg. 4 |
+| 8. compute_nodes.instance_type | Compute node VM size |eg. m5.2xlarge |
+| 9. compute_nodes.min_count | Minimum number of compute nodes |eg. 2 |
+| 10. compute_nodes.max_count |Maximum number of compute nodes |eg. 4 |
+| 11. gpu_enabled |Add GPU nodepool | True or False |
+| 12. gpu_nodes.instance_type | gpu node VM size | eg. p3.2xlarge |
+| 13. gpu_nodes.min_count | Minimum number of gpu nodes |eg. 2 |
+| 14. gpu_nodes.max_count | Maximum number of gpu nodes | eg. 4|
+| 15. domain_name | domain on which Katonic MLOps Platform will be accessed |eg. mydomain.example.com |
+| 16. shared_storage.create | create EFS |True or False |
+| 17. autoscaler | Enable Autoscaling | True or False |
+| 18. backup_enabled | Backup enable |True or False |
+| 19. backup_schedule |schedule of backups | eg. "@every 24h" |
+| 20. backup_expiration | backup expiration | eg. 2160h0m0s |
+| 21. quay_username |
+| 22. quay_password |
+| 23. adminUsername |email for admin user | eg. john@katonic.ai |
+| 24. adminPassword | password for admin user |at least 1 special character at least 1 upper case letter at least 1 lower case letter minimum 8 characters |
+                           
+                          
+1. Installing Katonic MLOps Platform:
+```
+docker run -it --rm --name install-katonic -v /root/.aws:/root/.aws -v $(pwd):/inventory quay.io/katonic/katonic-installer:v3.2 
+```
+
+**Installation Verification**:
+
+The installation process can take up to 45 minutes to fully complete. The installer will output verbose logs, and commands to take kubectl access of deployed cluster and surface any errors it encounters. After installation, you can use the following commands to check whether all applications are in a running state or not.
+```
+aws eks update-kubeconfig --name katonic-mlops-platform --region {{region_name}}
+kubectl get pods --all-namespace
+```
+        
+This will show the status of all pods being created by the installation process. If you see any pods enter a crash loop or hang in a non-ready state, you can get logs from that pod by running:
+ ```
+ kubectl logs $POD_NAME --namespace $NAMESPACE_NAME
+ ```
+If the installation completes successfully, you should see a message that says:
+
+```
+TASK [platform-deployment : Credentials to access Katonic MLOps Platform] *******************************ok: [localhost] => {
+    "msg": [
+        "Platform Domain: $domain_name",
+        "Username: $adminUsername",
+        "Password: $adminPassword"
+    ]
+}
+```
+
+**2. Install Katonic Platform on existing AWS Elastic Kubernetes Service:**
+
+   1. Log in to Quay with the credentials described in the requirements section above.
+        ```
+        docker login quay.io
+        ```
+   2. Retrieve the Katonic installer image from Quay .
+        ```
+        docker pull quay.io/katonic/katonic-installer:v3.2
+        ```
+   3. Take kubectl access to your EKS cluster using the following command
+        ```
+        aws eks update-kubeconfig --name katonic-mlops-platform --region {{region_name}}
+        ```
+   4. Create a directory.
+        ```
+        mkdir katonic
+        cd katonic
+        ```
+   5. Put the PEM encoded public key certificate (having extension .crt) for your domain and private key associated with the given certificate(having extension .key) inside the current directory(katonic) .
+   
+   6. Initialize the installer application to generate a template configuration file named katonic.yml.
+ ```
+ docker run -it --rm --name generating-yaml -v $(pwd):/install quay.io/katonic/katonic-installer:v3.2 init aws
+ ```
+Edit the configuration file with all necessary details about the target cluster, storage systems, and hosting domain. Read the following configuration reference, these are the only parameters required when installing the Katonic MLOps platform on existing EKS.
+    
+ |     Parameter         |     Description         |     Value      |
+|-----------------------|-------------------------|----------------|      
+| 1. deployment_type    | Katonic MLOps platform can be installed in either POC or Operational(HA) mode|  POC or Operational
+|                       |                            
+| 2. create_k8s_cluster |create EKS or not. Must be set False if EKS is already deployed     | True or False |
+| 3. aws_region | AWS region name | eg. us-east-1 |
+| 4. kubernetes_distribution | Distribution of Kubernetes |  	has to be kubernetes |
+| 5. platform_nodes.instance_type | Platform node VM size | eg. m5.xlarge |
+| 6. platform_nodes.min_count | Minimum number of platform nodes |eg. 2 |
+| 7. platform_nodes.max_count | Maximum number of platform nodes |eg. 4 |
+| 8. compute_nodes.instance_type | Compute node VM size |eg. m5.2xlarge |
+| 9. compute_nodes.min_count | Minimum number of compute nodes |eg. 2 |
+| 10. compute_nodes.max_count |Maximum number of compute nodes |eg. 4 |
+| 11. gpu_enabled |Add GPU nodepool | True or False |
+| 12. gpu_nodes.instance_type | gpu node VM size | eg. p3.2xlarge |
+| 13. gpu_nodes.min_count | Minimum number of gpu nodes |eg. 2 |
+| 14. gpu_nodes.max_count | Maximum number of gpu nodes | eg. 4|
+| 15. domain_name | domain on which Katonic MLOps Platform will be accessed |eg. mydomain.example.com |
+| 16. shared_storage.create | create EFS |True or False |
+| 17. autoscaler | Enable Autoscaling | True or False |
+| 18. backup_enabled | Backup enable |True or False |
+| 19. backup_schedule | schedule of backups | eg. "@every 24h" |
+| 20. backup_expiration | backup expiration | eg. 2160h0m0s |
+| 21. quay_username |
+| 22. quay_password |
+| 23. adminUsername |email for admin user | eg. john@katonic.ai |
+| 24. adminPassword | password for admin user |at least 1 special character at least 1 upper case letter at least 1 lower case letter minimum 8 characters |
+  
+ 7. Installing Katonic MLOps Platform
+ ```
+ docker run -it --rm --name install-katonic -v /root/.kube:/root/.kube -v $(pwd):/inventory quay.io/katonic/katonic-installer:v3.2 
+ ```
+        
+**Installation Verification:**
+
+The installation process can take up to 45 minutes to fully complete. The installer will output verbose logs, and commands to take kubectl access of deployed cluster and surface any errors it encounters. After installation, you can use the following commands to check whether all applications are in a running state or not.        
+ ```
+ kubectl get pods --all-namespace
+ ```
+This will show the status of all pods being created by the installation process. If you see any pods enter a crash loop or hang in a non-ready state, you can get logs from that pod by running:
+ ```
+ kubectl logs $POD_NAME --namespace $NAMESPACE_NAME
+ ```
+        
+If the installation completes successfully, you should see a message that says:
+```
+TASK [platform-deployment : Credentials to access Katonic MLOps Platform] *******************************ok: [localhost] => {
+    "msg": [
+        "Platform Domain: $domain_name",
+        "Username: $adminUsername",
+        "Password: $adminPassword"
+    ]
+}
+```
+However, the application will only be accessible via HTTPS at that FQDN if you have configured DNS for the name to point to an ingress load balancer with the appropriate SSL certificate that forwards traffic to your platform nodes.
+
+
+**Post-Installation steps:**
+
+**1. File Manager:**
+
+  ```
+  kubectl rollout restart deploy minio-server
+  kubectl rollout status deploy minio-server
+  ```
+**2. Domain:**
+
+You can identify a domain for your cluster. This allows you to use any domain as the location for the cluster. For example, you could set the domain for the cluster as katonic.company.com.
+
+For this option to work, you will need to set the required DNS routing rules between the domain and the IP address of the cluster after the katonic-installer has finished running.
+
+You will need to create a CNAME/A listing for *.<your_domain> with the IP address of the auto scaler for the cluster. Make sure you include the wildcard: *.
+
+The domain is the same domain you entered as <your_domain> in the katonic-installer
+
+To get the IP address of the cluster run the following command has been deployed:
+
+ ```
+ kubectl get svc istio-ingressgateway -n istio-system | awk '{print $4}' | tail -n +2
+ ```
+    
+**Test and troubleshoot:**
+
+Run the following tests to verify that your Katonic installation was successful:
+
+Login to the Katonic application and that all the navigation panel options are operational.
+
+Failure of this test means you must check that Keycloak was set up properly.
+
+Create a new project and launch a Jupyter/JupyterLab workspace.
+
+Failure of this test means you must check that default environment images have been loaded in the cluster.
+
+Publish an app with flask or shiny apps.
+
+Failure of this test means you must check that the environment images have flask and shiny installed.
+    
