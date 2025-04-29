@@ -34,6 +34,8 @@ This repository demonstrates a complete **CI/CD pipeline on Google Cloud** for a
 
 
 ---
+## <img src="https://www.vectorlogo.zone/logos/google_cloud/google_cloud-icon.svg" alt="GKE" width="40"/>
+ GKE cluster
 
 ## 🐳 Dockerfile
 
@@ -177,11 +179,12 @@ substitutions:
 options:
   dynamicSubstitutions: true # Allows use of dynamic variables like BUILD_ID, PROJECT_ID
   logging: GCS_ONLY # Store build logs only in Google Cloud Storage
+
 logsBucket: 'gs://gcpdevops-s' # Specific GCS bucket for storing logs
 
 # Service Account: Specifies the identity Cloud Build uses to execute the steps.
-# This account needs appropriate IAM permissions.
-serviceAccount: 'projects/backend-56707/serviceAccounts/gcp-devops@backend-56707.iam.gserviceaccount.com'
+# This account needs appropriate IAM permissions. Use this service account also for GKE cluster
+serviceAccount: 'projects/ds-team-384807/serviceAccounts/gcp-devops@ds-team-384807.iam.gserviceaccount.com'
 ```
 
 ---
@@ -214,11 +217,7 @@ The specified Cloud Build `serviceAccount` (`gcp-devops@backend-56707.iam.gservi
 Once the Cloud Build pipeline completes successfully:
 
 1.  **Connect to your GKE cluster** (if you haven't already):
-    ```bash
-    gcloud container clusters get-credentials gcp-devops \
-      --zone us-central1-c \
-      --project backend-56707
-    ```
+
 2.  **Get the Service details** to find the external IP:
     ```bash
     kubectl get svc gcp-devops-gke-service -n gcp-devops-prod
@@ -229,4 +228,6 @@ Once the Cloud Build pipeline completes successfully:
 
 Santosh-Shetkar/DevOps-Projects-Doc/GCP DevOps/images/k8s.png
 
-![GKE Architecture](images/k8s.png))
+![Kubernetes Service](images/k8s.png))
+
+
