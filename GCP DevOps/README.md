@@ -35,7 +35,8 @@ This repository demonstrates a complete **CI/CD pipeline on Google Cloud** for a
 
 ---
 ## ☸️ Create GKE cluster
-![Google Kubernetes Engine](images/gke cluster.png))
+![Google Kubernetes Engine](images/gkecluster.png))
+
 
 ## 🐳 Dockerfile
 
@@ -226,8 +227,6 @@ Once the Cloud Build pipeline completes successfully:
 3.  **Open the application** in your web browser:
     `http://<EXTERNAL-IP>` (Uses port 80 by default as defined in the Service)
 
-Santosh-Shetkar/DevOps-Projects-Doc/GCP DevOps/images/k8s.png
-
-![Kubernetes Service](images/k8s.png))
+    ![Kubernetes Service](images/k8s.png))
 
 
