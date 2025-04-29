@@ -35,7 +35,7 @@ This repository demonstrates a complete **CI/CD pipeline on Google Cloud** for a
 
 ---
 ## ☸️ Create GKE cluster
-![Google Kubernetes Engine](images/gkecluster.png))
+![Google Kubernetes Engine](images/gkecluster.png)
 
 
 ## 🐳 Dockerfile
@@ -211,6 +211,16 @@ The specified Cloud Build `serviceAccount` (`gcp-devops@backend-56707.iam.gservi
 5.  **Deploy**: The `gke-deploy` tool applies the updated `gke-deploy.yml` manifest to your GKE cluster (`gcp-devops`), deploying or updating the application within the `gcp-devops-prod` namespace.
 6.  **Expose**: The Kubernetes Service of type `LoadBalancer` provisions a Google Cloud Load Balancer, making your application accessible via an external IP address.
 
+Some images of project
+ CodeBuild pipeline image
+ ![Pipeline](images/codebuild1.png)
+
+ Image store on Artifact Registry
+ ![Pipeline](images/artifactregistry.png)
+
+ Log are store in GCP GCS bucket
+ ![gcs](images/gcpgcsbucket.png.png)
+
 ---
 
 ## 🌐 Accessing the Application
@@ -229,4 +239,6 @@ Once the Cloud Build pipeline completes successfully:
 
     ![Kubernetes Service](images/k8s.png))
 
+    Access the application
+    ![access](images/accessapp.png))
 
