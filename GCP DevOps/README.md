@@ -16,7 +16,7 @@ This repository demonstrates a complete **CI/CD pipeline on Google Cloud** for a
 .
 ├── Dockerfile                 # Defines the container image for the Flask app
 ├── requirements.txt           # Lists Python dependencies for the app
-├── main.py                    # Example Flask application code
+├── app.py                    # Example Flask application code
 ├── cloudbuild.yaml            # Configuration file for the Cloud Build pipeline
 └── gke-deploy.yml             # Kubernetes manifests (Deployment & Service)
 ```
@@ -65,7 +65,7 @@ COPY . .
 # Define environment variable (can be overridden)
 ENV PORT 5000
 
-# Run main.py when the container launches using Flask's built-in server
+# Run app.py when the container launches using Flask's built-in server
 # Host 0.0.0.0 makes it accessible from outside the container within the K8s network
 CMD [ "python3", "-m" , "flask", "run", "--host=0.0.0.0", "--port=5000"]
 ```
@@ -211,15 +211,15 @@ The specified Cloud Build `serviceAccount` (`gcp-devops@backend-56707.iam.gservi
 5.  **Deploy**: The `gke-deploy` tool applies the updated `gke-deploy.yml` manifest to your GKE cluster (`gcp-devops`), deploying or updating the application within the `gcp-devops-prod` namespace.
 6.  **Expose**: The Kubernetes Service of type `LoadBalancer` provisions a Google Cloud Load Balancer, making your application accessible via an external IP address.
 
-Some images of project
- CodeBuild pipeline image
+Some screenshots of project
+ CodeBuild pipeline
  ![Pipeline](images/codebuild1.png)
 
- Image store on Artifact Registry
+ Artifact Registry
  ![Pipeline](images/artifactregistry.png)
 
- Log are store in GCP GCS bucket
- ![gcs](images/gcpgcsbucket.png.png)
+ Logs Stored in GCS
+ ![gcs](images/gcpgcsbucket.png)
 
 ---
 
