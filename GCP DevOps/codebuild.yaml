@@ -1,0 +1,33 @@
+steps:
+- name: 'gcr.io/cloud-builders/docker'
+  args: ['build', '-t', '${_LOCATION}-docker.pkg.dev/${PROJECT_ID}/${_REPOSITORY}/${_IMAGE}:${BUILD_ID}', '.']   #Build Image
+
+- name: 'gcr.io/cloud-builders/docker'
+  args:
+    ['push','${_LOCATION}-docker.pkg.dev/${PROJECT_ID}/${_REPOSITORY}/${_IMAGE}:${BUILD_ID}'] #Push image to GCP artifact registry
+
+- name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+  entrypoint: 'bash'
+  args: ['-c', 'sed -i "s|IMAGE_TO_REPLACE|${_LOCATION}-docker.pkg.dev/${PROJECT_ID}/${_REPOSITORY}/${_IMAGE}:${BUILD_ID}|g" gke-deploy.yml'] #Update image tag in deployment yaml
+
+- name: "gcr.io/cloud-builders/gke-deploy"  #Apply deployment yaml
+  args:
+  - run
+  - --filename=gke-deploy.yml
+  - --location=us-central1-c
+  - --cluster=gcp-devops
+  - --namespace=gcp-devops-prod
+
+substitutions:
+  _LOCATION: 'us'        # Replace with your desired region
+  _REPOSITORY: 'gcpdevops'          # Replace with your Artifact Registry repository name
+  _IMAGE: 'gcpdevopssantosh'             # Replace with your image name
+
+options:
+  dynamicSubstitutions: true #Allows dynamic substitution of _LOCATION, _REPOSITORY, _IMAGE, etc.
+
+
+logsBucket: 'gs://gcpdevops-s'      #Logs are stored in this GCP GCS bucket
+serviceAccount: 'projects/ds-team-384807/serviceAccounts/gcp-devops@ds-team-384807.iam.gserviceaccount.com'
+options:
+  logging: GCS_ONLY   #Logs will be written only to the specified GCS bucket.

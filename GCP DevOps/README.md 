@@ -31,8 +31,7 @@ This repository demonstrates a complete **CI/CD pipeline on Google Cloud** for a
 * Google Artifact Registry
 * Google Kubernetes Engine (GKE)
 * Kubernetes (Deployment, Service objects)
-* `sed` (for manifest substitution in Cloud Build)
-* `bash`
+
 
 ---
 
@@ -228,15 +227,7 @@ Once the Cloud Build pipeline completes successfully:
 3.  **Open the application** in your web browser:
     `http://<EXTERNAL-IP>` (Uses port 80 by default as defined in the Service)
 
----
+Santosh-Shetkar/DevOps-Projects-Doc/GCP DevOps/images/k8s.png
 
-## ✅ Future Improvements (Optional)
 
-* **Health Checks**: Add `readinessProbe` and `livenessProbe` to the Deployment for better reliability and zero-downtime updates.
-* **Resource Management**: Define `resources.requests` and `resources.limits` for the container to ensure stable performance and resource allocation.
-* **Autoscaling**: Implement a `HorizontalPodAutoscaler` (HPA) to automatically scale the number of pods based on CPU or custom metrics.
-* **Staging Environment**: Create a separate Cloud Build trigger and GKE namespace/cluster for a staging environment to test changes before production.
-* **Secrets Management**: Use Kubernetes Secrets or Google Secret Manager for handling sensitive data instead of environment variables.
-* **GitOps**: Implement a GitOps workflow using tools like Argo CD or Flux for managing deployments declaratively through Git.
-* **Testing**: Add steps to `cloudbuild.yaml` to run unit, integration, or end-to-end tests before deployment.
-
+![image](Santosh-Shetkar/DevOps-Projects-Doc/GCP DevOps/images/k8s.png)
