@@ -34,8 +34,8 @@ This repository demonstrates a complete **CI/CD pipeline on Google Cloud** for a
 
 
 ---
-## <img src="https://www.vectorlogo.zone/logos/google_cloud/google_cloud-icon.svg" alt="GKE" width="40"/>
- GKE cluster
+## ☸️ Create GKE cluster
+![Google Kubernetes Engine](images/gke cluster.png))
 
 ## 🐳 Dockerfile
 
