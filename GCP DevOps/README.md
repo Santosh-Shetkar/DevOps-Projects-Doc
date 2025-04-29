@@ -229,4 +229,4 @@ Once the Cloud Build pipeline completes successfully:
 
 Santosh-Shetkar/DevOps-Projects-Doc/GCP DevOps/images/k8s.png
 
-![GKE Architecture](Santosh-Shetkar/DevOps-Projects-Doc/GCP DevOps/images/k8s.png))
+![GKE Architecture](images/k8s.png))
