@@ -31,6 +31,16 @@ helm install vault hashicorp/vault \
   --set "server.ha.raft.enabled=true"
 ```
 
+Helm Flags Explained:
+
+ui.enabled=true: Enables the Vault web UI.
+server.ha.enabled=true: Enables High Availability mode.
+server.ha.replicas=3: Deploys 3 replicas for HA.
+server.ha.raft.enabled=true: Enables Raft as the storage backend (required for HA).
+server.dataStorage.*: Configures persistent storage for Vault.
+
+![vault install](images/1.png)
+
 ## 🌐 Expose Vault UI
 
 ```bash
