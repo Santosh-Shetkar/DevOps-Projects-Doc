@@ -143,6 +143,7 @@ kubectl exec -it vault-0 -n vault -- vault write auth/kubernetes/role/vault-demo
   policies=mysecret \
   ttl=1h
 ```
+![vault install13](images/13.png)
 
 🧬 Store Secrets in Vault
 Create platform-env.json:
@@ -164,6 +165,7 @@ kubectl cp platform-env.json vault/vault-0:/tmp/platform-env.json
 
 kubectl exec -it vault-0 -n vault -- sh -c 'vault kv put kv-v2/vault-demo/mysecret @/tmp/platform-env.json'
 ```
+![vault install14](images/14.png)
 
 ✅ Verify Secrets
 
