@@ -1,4 +1,4 @@
-# 🔐 HashiCorp Vault on Kubernetes with Helm
+# 🔐 HashiCorp Vault HA on Kubernetes
 
 This guide walks you through deploying **HashiCorp Vault** on Kubernetes using Helm, enabling High Availability with Raft storage, exposing the Vault UI, configuring Kubernetes authentication, and storing/retrieving secrets.
 
