@@ -128,12 +128,13 @@ path "kv-v2/data/vault-demo/mysecret" {
 }
 EOF
 ```
+![vault install11](images/11.png)
 
 🛡️ Create Kubernetes Service Account
 ```bash
 kubectl create sa vault-demo-sa
 ```
-
+![vault install12](images/12.png)
 🎟️ Create Vault Role
 ```bash
 kubectl exec -it vault-0 -n vault -- vault write auth/kubernetes/role/vault-demo \
