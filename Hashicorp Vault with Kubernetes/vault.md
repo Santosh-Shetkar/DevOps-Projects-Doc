@@ -31,19 +31,25 @@ helm install vault hashicorp/vault \
   --set "server.ha.raft.enabled=true"
 ```
 
-Helm Flags Explained:
+⚙️ Helm Configuration Flags Explained
+--set ui.enabled=true:
+Enables the Vault Web UI for easy access and management.
 
-ui.enabled=true: Enables the Vault web UI.
+--set server.ha.enabled=true:
+Activates High Availability (HA) mode. This allows Vault to run multiple replicas, ensuring continuity if a pod or node fails.
 
-server.ha.enabled=true: Enables High Availability mode.
+--set server.ha.replicas=3:
+Deploys three Vault server replicas in HA mode.
+⚠️ Important: For true HA, these pods should ideally be scheduled across three separate Kubernetes nodes to ensure redundancy and fault tolerance.
 
-server.ha.replicas=3: Deploys 3 replicas for HA.
+--set server.dataStorage.enabled=true and --set server.dataStorage.size=10Gi:
+Enables persistent volume storage with a size of 10Gi per Vault pod.
 
-server.ha.raft.enabled=true: Enables Raft as the storage backend (required for HA).
+--set server.ha.raft.enabled=true:
+Enables Integrated Storage (Raft) as the HA storage backend.
 
-server.dataStorage.*: Configures persistent storage for Vault.
-
-![vault install](images/1.png)
+![vault install1](images/1.png)
+![vault install2](images/2.png)
 
 ## 🌐 Expose Vault UI
 
@@ -56,12 +62,20 @@ kubectl patch svc vault-ui -n vault -p '{"spec": {"type": "NodePort"}}'
 ```bash
 kubectl exec -it vault-0 -n vault -- vault operator init -key-shares=1 -key-threshold=1
 ```
+![vault install3](images/3.png)
 
 ## 🔓 Unseal Vault
 
 ```bash
 kubectl exec -it vault-0 -n vault -- vault operator unseal <UNSEAL_KEY>
 ```
+Vault encrypts data and requires an "unseal" process to start and become operational.
+
+Uses the unseal key to unlock Vault so it can start serving requests.
+
+Without unsealing, Vault remains in a sealed state, meaning no secrets can be read or written
+
+![vault install4](images/4.png)
 
 Join and unseal other pods:
 ```bash
@@ -71,12 +85,14 @@ kubectl exec -it vault-2 -n vault -- vault operator raft join http://vault-0.vau
 kubectl exec -it vault-1 -n vault -- vault operator unseal <UNSEAL_KEY>
 kubectl exec -it vault-2 -n vault -- vault operator unseal <UNSEAL_KEY>
 ```
+![vault install5](images/5.png)
 
 📊 Verify Vault Cluster Status
 
 ```bash
 kubectl exec -it vault-0 -n vault -- vault operator raft list-peers
 ```
+![vault install6](images/6.png)
 
 🔐 Log into Vault
 
