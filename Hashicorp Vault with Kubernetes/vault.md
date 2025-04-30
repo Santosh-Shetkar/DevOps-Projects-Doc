@@ -51,7 +51,6 @@ kubectl exec -it vault-0 -n vault -- vault write auth/kubernetes/config \
 #     kubernetes_host="[https://kubernetes.default.svc:443](https://kubernetes.default.svc:443)" \
 #     kubernetes_ca_cert=@/var/run/secrets/kubernetes.io/serviceaccount/ca.crt \
 #     token_reviewer_jwt=$(kubectl exec -it vault-0 -n vault -- cat /var/run/secrets/kubernetes.io/serviceaccount/token)
-
 11. Creating a Vault PolicyDefine a policy that grants permissions to read/write secrets at a specific path within the KV engine.kubectl exec -it vault-0 -n vault -- vault policy write mysecret - << EOF
 path "kv-v2/data/vault-demo/mysecret" {
   capabilities = ["create", "update", "read"]
@@ -102,4 +101,4 @@ SECRET_DATA=$(echo $SECRET_RESPONSE | jq -r '.data.data')
 
 # 7. Use the secrets (example: print KEYCLOAK_USER)
 echo $SECRET_DATA | jq -r '.KEYCLOAK_USER'
-This concludes
+This concludes the basic setup and usage of
