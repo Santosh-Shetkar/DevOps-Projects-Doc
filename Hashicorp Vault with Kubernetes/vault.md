@@ -31,18 +31,19 @@ helm install vault hashicorp/vault \
   --set "server.ha.raft.enabled=true"
 ```
 
-🌐 Expose Vault UI
+## 🌐 Expose Vault UI
 
 ```bash
 kubectl patch svc vault-ui -n vault -p '{"spec": {"type": "NodePort"}}'
 ```
 
-🧩 Initialize Vault
+## 🧩 Initialize Vault
+
 ```bash
 kubectl exec -it vault-0 -n vault -- vault operator init -key-shares=1 -key-threshold=1
 ```
 
-🔓 Unseal Vault
+## 🔓 Unseal Vault
 
 ```bash
 kubectl exec -it vault-0 -n vault -- vault operator unseal <UNSEAL_KEY>
@@ -55,4 +56,81 @@ kubectl exec -it vault-2 -n vault -- vault operator raft join http://vault-0.vau
 
 kubectl exec -it vault-1 -n vault -- vault operator unseal <UNSEAL_KEY>
 kubectl exec -it vault-2 -n vault -- vault operator unseal <UNSEAL_KEY>
+```
+
+📊 Verify Vault Cluster Status
+
+```bash
+kubectl exec -it vault-0 -n vault -- vault operator raft list-peers
+```
+
+🔐 Log into Vault
+
+```bash
+kubectl exec -it vault-0 -n vault -- vault login <ROOT_TOKEN>
+```
+
+📁 Enable KV Secrets Engine (v2)
+```bash
+kubectl exec -it vault-0 -n vault -- vault secrets enable kv-v2
+```
+
+🔑 Enable Kubernetes Authentication
+```bash
+kubectl exec -it vault-0 -n vault -- vault auth enable kubernetes
+```
+Configure Vault auth with Kubernetes:
+```bash
+kubectl exec -it vault-0 -n vault -- vault write auth/kubernetes/config \
+  kubernetes_host="https://$KUBERNETES_SERVICE_HOST:$KUBERNETES_SERVICE_PORT"
+```
+
+📜 Create Vault Policy
+```bash
+kubectl exec -it vault-0 -n vault -- vault policy write mysecret - << EOF
+path "kv-v2/data/vault-demo/mysecret" {
+  capabilities = ["create", "update", "read"]
+}
+EOF
+```
+
+🛡️ Create Kubernetes Service Account
+```bash
+kubectl create sa vault-demo-sa
+```
+
+🎟️ Create Vault Role
+```bash
+kubectl exec -it vault-0 -n vault -- vault write auth/kubernetes/role/vault-demo \
+  bound_service_account_names=vault-demo-sa \
+  bound_service_account_namespaces=default \
+  policies=mysecret \
+  ttl=1h
+```
+
+🧬 Store Secrets in Vault
+Create platform-env.json:
+```bash
+{
+  "EXTRACT_API_ENDPOINT": "http://extraction-api:8000",
+  "KEYCLOAK_API_URL": "http://keycloak-svc.keycloak.svc.cluster.local:80",
+  "KEYCLOAK_USER": "admin",
+  "KEYCLOAK_PASSWORD": "ikxuW^uG6d:XU4S",
+  "VECTORDB_USERNAME": "username",
+  "VECTORDB_PASSWORD": "password",
+  "VECTORDB_PORT": "19530"
+}
+```
+
+Upload and store it in Vault:
+```bash
+kubectl cp platform-env.json vault/vault-0:/tmp/platform-env.json
+
+kubectl exec -it vault-0 -n vault -- sh -c 'vault kv put kv-v2/vault-demo/mysecret @/tmp/platform-env.json'
+```
+
+✅ Verify Secrets
+
+```bash
+kubectl exec -it vault-0 -n vault -- vault kv get kv-v2/vault-demo/mysecret
 ```
