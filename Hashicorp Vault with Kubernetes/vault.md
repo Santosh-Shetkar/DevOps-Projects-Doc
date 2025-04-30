@@ -99,21 +99,26 @@ kubectl exec -it vault-0 -n vault -- vault operator raft list-peers
 ```bash
 kubectl exec -it vault-0 -n vault -- vault login <ROOT_TOKEN>
 ```
+![vault install7](images/7.png)
 
 📁 Enable KV Secrets Engine (v2)
 ```bash
 kubectl exec -it vault-0 -n vault -- vault secrets enable kv-v2
 ```
+![vault install8](images/8.png)
 
 🔑 Enable Kubernetes Authentication
 ```bash
 kubectl exec -it vault-0 -n vault -- vault auth enable kubernetes
 ```
+![vault install9](images/9.png)
+
 Configure Vault auth with Kubernetes:
 ```bash
 kubectl exec -it vault-0 -n vault -- vault write auth/kubernetes/config \
   kubernetes_host="https://$KUBERNETES_SERVICE_HOST:$KUBERNETES_SERVICE_PORT"
 ```
+![vault install10](images/10.png)
 
 📜 Create Vault Policy
 ```bash
