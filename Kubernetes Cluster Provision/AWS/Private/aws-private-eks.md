@@ -73,6 +73,7 @@ This guide explains how to configure and deploy an Amazon EKS (Elastic Kubernete
 
 .
 ├── eks-vars.yml    # Cluster configuration variables
+
 └── aws-eks.tf      # Terraform module and resource definitions
 
 🔧 Prerequisites
