@@ -1,4 +1,4 @@
-# Terraform AWS Infrastructure Setup for Private EKS Cluster
+# Terraform AWS Infrastructure and Private EKS HA Cluster Setup
 
 This repository provides a Terraform configuration (`aws.tf`) to provision foundational AWS infrastructure for hosting a **Private EKS Cluster**. The setup includes a custom VPC, public and private subnets, NAT Gateway, route tables, and a bastion (jump) server.
 
