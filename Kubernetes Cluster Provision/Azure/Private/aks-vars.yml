@@ -1,0 +1,47 @@
+aks_pricing_tier: Standard                                     #Free / Standard / Premium
+kubernetes_version: 1.30.11    #1.30.6                             #Supported Versions are 1.28.x
+
+cluster_name: katonic-platform-v6-0               #Cluster name must be less than 30 characters.
+
+resource_group_name: 
+resource_group_location: 
+azure_subscription_id: 
+
+vnet_name: 
+aks_subnet_name:
+
+compute_nodes:
+  instance_type: Standard_D8s_v3                        #Default # If you are deploying resources in the Central India region, consider utilizing the D8ads_v5 instance_type for its cost efficiency.
+  min_count: 1                                          #minimum 1 recommended
+  max_count: 4
+  os_disk_size: 128
+
+platform_nodes:
+  instance_type: Standard_DS3_v2                        #Default # If you are deploying resources in the Central India region, consider utilizing the D8ads_v5 instance_type for its cost efficiency.
+  min_count: 2                                          #minimum 2 recommended
+  max_count: 4        
+  os_disk_size: 128
+
+vectordb_nodes:
+  instance_type: Standard_DS3_v2                        #Default # If you are deploying resources in the Central India region, consider utilizing the D8ads_v5 instance_type for its cost efficiency.
+  min_count: 1                                          #minimum 1 recommended
+  max_count: 4
+  os_disk_size: 128
+  
+deployment_nodes:
+  instance_type: Standard_D8s_v3                        #Default # If you are deploying resources in the Central India region, consider utilizing the D8ads_v5 instance_type for its cost efficiency.
+  min_count: 1                                          #minimum 1 recommended
+  max_count: 4
+  os_disk_size: 128
+
+#GPU
+gpu_enabled: False                                      #It is mandatory to set enable_gpu_workspace to True when you want to use GPU Workspaces
+gpu_nodes:
+  instance_type: Standard_NC6s_v3                       #Default
+  gpu_type: "none"                                      #Enter the type of GPU available on machine. eg. v100,k80,a100,a10g
+  min_count: 1                                          #minimum 1 recommended if gpu_enabled: True
+  max_count: 4
+  os_disk_size: 512
+  gpu_vRAM: 
+  gpus_per_node:
+enable_gpu_workspace: False
