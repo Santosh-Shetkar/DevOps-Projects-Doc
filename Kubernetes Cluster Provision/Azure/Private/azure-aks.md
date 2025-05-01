@@ -153,8 +153,8 @@ resource "azurerm_virtual_machine" "jumphost" {
 
   os_profile {
     computer_name  = "hostname"
-    admin_username = "katonic"
-    admin_password = "Katonic@1234"
+    admin_username = "santosh"
+    admin_password = "santosh@1234"
   }
 
   storage_os_disk {
@@ -194,8 +194,8 @@ resource "azurerm_virtual_machine" "jumphost" {
     ]
     connection {
       type     = "ssh"
-      user     = "katonic"
-      password = "Katonic@1234"
+      user     = "santosh"
+      password = "santosh@1234"
       host     = data.azurerm_public_ip.public_ip.ip_address
     }
   }
@@ -231,7 +231,7 @@ Type yes when prompted to confirm.
 Step 4: Verify
 - In the Azure portal, confirm the tf-test resource group and its resources.
 - SSH into the jump host:
-ssh katonic@<Public_IP>
+ssh santosh@<Public_IP>
 
 Now after accessing the jump server setup AKS cluster by following below instructions
 

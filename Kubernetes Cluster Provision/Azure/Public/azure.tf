@@ -9,7 +9,7 @@ terraform {
 }
 
 locals {
-  cluster_config    = yamldecode(file("aks-vars.yml"))
+  cluster_config    = yamldecode(file("vars.yml"))
   platform_nodes    = local.cluster_config.platform_nodes
   compute_nodes     = local.cluster_config.compute_nodes
   vectordb_nodes    = local.cluster_config.vectordb_nodes  
@@ -23,12 +23,11 @@ provider "azurerm" {
 }
 
 resource "azurerm_kubernetes_cluster" "aks" {
-  name                      = local.cluster_config.cluster_name
-  location                  = local.cluster_config.resource_group_location
-  resource_group_name       = local.cluster_config.resource_group_name
-  kubernetes_version        = local.cluster_config.kubernetes_version
-  dns_prefix                = "my-test-domain"
-  private_cluster_enabled   = true
+  name                = local.cluster_config.cluster_name
+  location            = local.cluster_config.resource_group_location
+  resource_group_name = local.cluster_config.resource_group_name
+  kubernetes_version  = local.cluster_config.kubernetes_version
+  dns_prefix          = "my-test-domain"
   sku_tier = local.cluster_config.aks_pricing_tier
 
   identity {
@@ -40,25 +39,22 @@ resource "azurerm_kubernetes_cluster" "aks" {
     network_policy = "calico"
   }
 
-
   default_node_pool {
     name            = "compute"
     vm_size         = local.compute_nodes.instance_type
-    vnet_subnet_id  = "/subscriptions/${local.cluster_config.azure_subscription_id}/resourceGroups/${local.cluster_config.resource_group_name}/providers/Microsoft.Network/virtualNetworks/${local.cluster_config.vnet_name}/subnets/${local.cluster_config.aks_subnet_name}"
-
+    
     node_labels = {
       "santosh.ai/node-pool" = "compute"
     }
     
     auto_scaling_enabled = true
-    max_count = local.compute_nodes.max_count
-    min_count = local.compute_nodes.min_count
+    max_count          = local.compute_nodes.max_count
+    min_count          = local.compute_nodes.min_count
     node_count         = local.compute_nodes.min_count
-    os_disk_size_gb = local.compute_nodes.os_disk_size
-    zones = [ 1 , 2 ]
+    os_disk_size_gb    = local.compute_nodes.os_disk_size
+    zones              = [ 1 , 2 ]
 
     max_pods = "110"
-
   }
 
   tags = {
@@ -76,15 +72,15 @@ resource "azurerm_kubernetes_cluster_node_pool" "nodepool_platform" {
   node_labels = {
     "santosh.ai/node-pool" = "platform"
   }
-    
+  
   node_taints = ["santosh.ai/node-pool=platform:NoSchedule"]
 
   auto_scaling_enabled = true
-  max_count = local.platform_nodes.max_count
-  min_count = local.platform_nodes.min_count
-  node_count = local.platform_nodes.min_count
-  os_disk_size_gb = local.platform_nodes.os_disk_size
-  zones = [ 1 , 2 ]
+  max_count         = local.platform_nodes.max_count
+  min_count         = local.platform_nodes.min_count
+  node_count        = local.platform_nodes.min_count
+  os_disk_size_gb   = local.platform_nodes.os_disk_size
+  zones             = [ 1 , 2 ]
 
   max_pods = "110"
 
@@ -101,15 +97,15 @@ resource "azurerm_kubernetes_cluster_node_pool" "nodepool_vectordb" {
   node_labels = {
     "santosh.ai/node-pool" = "vectordb"
   }
-    
+  
   node_taints = ["santosh.ai/node-pool=vectordb:NoSchedule"]
 
   auto_scaling_enabled = true
-  max_count = local.vectordb_nodes.max_count
-  min_count = local.vectordb_nodes.min_count
-  node_count = local.vectordb_nodes.min_count
-  os_disk_size_gb = local.vectordb_nodes.os_disk_size
-  zones = [ 1 , 2 ]
+  max_count         = local.vectordb_nodes.max_count
+  min_count         = local.vectordb_nodes.min_count
+  node_count        = local.vectordb_nodes.min_count
+  os_disk_size_gb   = local.vectordb_nodes.os_disk_size
+  zones             = [ 1 , 2 ]
 
   max_pods = "110"
 
