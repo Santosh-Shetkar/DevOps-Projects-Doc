@@ -1,0 +1,52 @@
+# EKS control plane version (only 1.30 supported)
+eks_version: "1.30"
+
+# Cluster identification
+cluster_name: katonic-platform-v6-0     # < 30 chars
+aws_region: us-east-2
+
+# Networking: choose public or private cluster
+private_cluster: False                   # True for private, False for public
+vpc_id:                                  # (required if private_cluster: True)
+subnet_1_id:                             # (required if private_cluster: True)
+subnet_2_id:                             # (required if private_cluster: True)
+jump_server_name:                        # (required if private_cluster: True)
+
+# Hybrid / GenAI application exposure
+enable_exposing_genai_applications_to_internet: False
+public_domain_for_genai_applications:            
+internal_loadbalancer: False               # True to use internal LB
+
+# Node group definitions
+compute_nodes:
+  instance_type: m5.2xlarge            # default
+  min_count: 1                         # recommended minimum
+  max_count: 4
+  os_disk_size: 128
+
+platform_nodes:
+  instance_type: m5.xlarge             # default
+  min_count: 2
+  max_count: 4
+  os_disk_size: 128
+
+vectordb_nodes:
+  instance_type: m5.xlarge
+  min_count: 1
+  max_count: 4
+  os_disk_size: 128
+
+deployment_nodes:
+  instance_type: m5.2xlarge
+  min_count: 1
+  max_count: 4
+  os_disk_size: 128
+
+# GPU optional
+gpu_enabled: False
+gpu_nodes:
+  instance_type: p2.xlarge
+  gpu_type: "none"
+  min_count: 1
+  max_count: 4
+  os_disk_size: 512

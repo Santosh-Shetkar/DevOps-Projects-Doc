@@ -1,0 +1,8 @@
+#Dictory variable type
+aws_region: us-east-2
+  
+random_value: abcabc
+
+ami: ami-0b4750268a88e78e0  # pass ami id ( region specific )
+
+ec2_key_name: aws-testing-private # only pass key name without .pem extension
