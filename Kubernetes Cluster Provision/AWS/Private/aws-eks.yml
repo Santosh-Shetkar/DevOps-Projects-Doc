@@ -2,7 +2,7 @@
 eks_version: "1.30"
 
 # Cluster identification
-cluster_name: katonic-platform-v6-0     # < 30 chars
+cluster_name: platform-v6-0     # < 30 chars
 aws_region: us-east-2
 
 # Networking: choose public or private cluster
