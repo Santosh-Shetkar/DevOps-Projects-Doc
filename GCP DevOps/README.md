@@ -1,12 +1,17 @@
 # 🚀 GCP DevOps CI/CD Pipeline
 
-This repository demonstrates a complete **CI/CD pipeline on Google Cloud** for a Python Flask application. It automates the build, testing (optional, not shown in this basic example), and deployment process using:
+This repository demonstrates a complete **CI/CD pipeline on Google Cloud** for a Python Flask application. 
+
+Automated Docker image build, push, and deployment to GKE using Cloud Build, Kubernetes, and Artifact Registry for the application. Enabled dynamic image updates and zero-downtime deployments via scripted manifest replacements.
+
+It automates the build, testing (optional, not shown in this basic example), and deployment process using:
 
 * **Cloud Build**: For orchestrating the CI/CD steps.
 * **Docker**: For containerizing the Flask application.
 * **Artifact Registry**: For storing Docker container images securely.
 * **Google Kubernetes Engine (GKE)**: For deploying and managing the containerized application.
 * **Kubernetes Manifests**: For defining the desired state of the application in GKE (Deployment and Service).
+
 
 ---
 
