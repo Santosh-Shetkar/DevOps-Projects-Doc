@@ -56,9 +56,75 @@ provider "aws" {
     region = local.cluster_config.aws_region
 }
 
+# Create the VPC
+resource "aws_vpc" "eks_vpc" {
+  cidr_block = "10.0.0.0/16"
+  enable_dns_support = true
+  enable_dns_hostnames = true
+  tags = {
+    Name = "katonic-vpc-${local.cluster_config.random_value}" 
+    unique-id = "katonic-${local.cluster_config.random_value}"
+  }
+}
+
+# Create public subnets
+resource "aws_subnet" "public_subnet_2a" {
+  vpc_id                  = aws_vpc.eks_vpc.id
+  cidr_block              = "10.0.1.0/21"
+  availability_zone       = local.region_az_mapping[local.cluster_config.aws_region][0]  
+  map_public_ip_on_launch = true
+  tags = {
+    Name = "katonic-vpc-${local.cluster_config.random_value}-Public-Subnet-(AZ1)"
+    unique-id = "katonic-${local.cluster_config.random_value}"
+  }
+}
+
+resource "aws_subnet" "public_subnet_2b" {
+  vpc_id                  = aws_vpc.eks_vpc.id
+  cidr_block              = "10.0.2.0/21"
+  availability_zone       = local.region_az_mapping[local.cluster_config.aws_region][1] 
+  map_public_ip_on_launch = true
+  tags = {
+    Name = "katonic-vpc-${local.cluster_config.random_value}-Public-Subnet-(AZ2)"
+    unique-id = "katonic-${local.cluster_config.random_value}"
+  }
+}
+
+# Create internet gateway
+resource "aws_internet_gateway" "eks_igw" {
+  vpc_id = aws_vpc.eks_vpc.id
+  tags = {
+    Name = "katonic-ig-${local.cluster_config.random_value}"
+    unique-id = "katonic-${local.cluster_config.random_value}"
+  }
+}
+
+# Create public route table and associate it with public subnets   
+resource "aws_route_table" "public_route_table" {
+  vpc_id = aws_vpc.eks_vpc.id
+  tags = {
+    Name = "katonic-vpc-${local.cluster_config.random_value}-Public-Routes"
+    unique-id = "katonic-${local.cluster_config.random_value}"
+  }
+  route {
+    cidr_block = "0.0.0.0/0"
+    gateway_id = aws_internet_gateway.eks_igw.id
+  }
+}
+
+resource "aws_route_table_association" "public_subnet_2a_association" {
+  subnet_id      = aws_subnet.public_subnet_2a.id
+  route_table_id = aws_route_table.public_route_table.id
+}
+
+resource "aws_route_table_association" "public_subnet_2b_association" {
+  subnet_id      = aws_subnet.public_subnet_2b.id
+  route_table_id = aws_route_table.public_route_table.id
+}
+
 # Create IAM role for EKS cluster
 resource "aws_iam_role" "eks-iam-role" {
-  name = "katonic-cluster-role-${local.cluster_config.random_value}"  
+  name = "katonic-cluster-role-${local.cluster_config.random_value}" 
   tags = {
     unique-id = "katonic-${local.cluster_config.random_value}"
   }
@@ -98,11 +164,13 @@ module "eks" {
   iam_role_arn = aws_iam_role.eks-iam-role.arn
   create_kms_key = false
   cluster_encryption_config = {}
-  vpc_id  = local.cluster_config.vpc_id
-  subnet_ids = [local.cluster_config.subnet_1_id, local.cluster_config.subnet_2_id]
+  vpc_id  = aws_vpc.eks_vpc.id
+  subnet_ids = [aws_subnet.public_subnet_2a.id, aws_subnet.public_subnet_2b.id]
   create_cloudwatch_log_group = false
-  cluster_endpoint_public_access  = false
-  cluster_endpoint_private_access = true
+  cluster_endpoint_public_access  = true
+  cluster_endpoint_public_access_cidrs = [ "0.0.0.0/0" ]
+  cluster_endpoint_private_access = false
+  cluster_service_ipv4_cidr = "10.100.0.0/16"
   authentication_mode = "API_AND_CONFIG_MAP"
   enable_cluster_creator_admin_permissions = true
 
@@ -119,6 +187,9 @@ module "eks" {
     }
     vpc-cni = {
       most_recent = true
+    }
+    eks-pod-identity-agent = {
+        most_recent = true
     }
   }
 }
@@ -203,7 +274,7 @@ resource "aws_eks_node_group" "platform_node_group" {
   cluster_name    = module.eks.cluster_name
   node_group_name = "platform"
   node_role_arn = aws_iam_role.workernodes.arn
-  subnet_ids = [local.cluster_config.subnet_1_id, local.cluster_config.subnet_2_id]
+  subnet_ids = [aws_subnet.public_subnet_2a.id, aws_subnet.public_subnet_2b.id]
   capacity_type   = "ON_DEMAND"
   instance_types = [local.platform_nodes.instance_type] 
   scaling_config {
@@ -236,7 +307,7 @@ resource "aws_eks_node_group" "compute_node_group" {
   cluster_name    = module.eks.cluster_name
   node_group_name = "compute"
   node_role_arn = aws_iam_role.workernodes.arn
-  subnet_ids = [local.cluster_config.subnet_1_id, local.cluster_config.subnet_2_id]
+  subnet_ids = [aws_subnet.public_subnet_2a.id, aws_subnet.public_subnet_2b.id]
   capacity_type   = "ON_DEMAND"
   instance_types = [local.compute_nodes.instance_type]
   scaling_config {
@@ -264,7 +335,7 @@ resource "aws_eks_node_group" "vectordb_node_group" {
   cluster_name    = module.eks.cluster_name
   node_group_name = "vectordb"
   node_role_arn   = aws_iam_role.workernodes.arn
-  subnet_ids      = [local.cluster_config.subnet_1_id, local.cluster_config.subnet_2_id]
+  subnet_ids = [aws_subnet.public_subnet_2a.id, aws_subnet.public_subnet_2b.id]
   capacity_type   = "ON_DEMAND"
   instance_types  = [local.vectordb_nodes.instance_type]
 
@@ -296,4 +367,13 @@ resource "aws_eks_node_group" "vectordb_node_group" {
   tags = {
     unique-id = "katonic-${local.cluster_config.random_value}"
   }
+}
+
+resource "null_resource" "run_shell_commands_1" {
+  provisioner "local-exec" {
+    command = <<-EOT
+      aws eks --region ${local.cluster_config.aws_region} update-kubeconfig --name ${trim(module.eks.cluster_name, " ")}
+    EOT
+  }
+  depends_on = [module.eks]
 }
