@@ -1,0 +1,53 @@
+gke_tier: STANDARD                                 #STANDARD or ENTERPRISE
+
+control_plane_authorized_networks:                          #List of allowed IP ranges (CIDR) for control plane access.
+
+vpc_name:
+subnet_name:
+
+gke_k8s_version: 1.31.6-gke.1020000  #1.31.5-gke.1023000             #Supported Versions are 1.28.x
+
+cluster_name: katonic-platform-v6-0           #Cluster name must be less than 30 characters.
+
+gcp_region: us-east1
+
+gcp_project_id:
+service_account_id:
+
+zone_1: us-east1-b                                 #Set subnet zone 
+zone_2: us-east1-c                                 #Set subnet zone 
+
+compute_nodes:
+  instance_type: c2-standard-8                    #Default
+  min_count: 1                                    #Minimum recommended 1
+  max_count: 4
+  os_disk_size: 128
+
+platform_nodes:
+  instance_type: c2-standard-4                    #Default
+  min_count: 2                                    #If high-availability is False then set min_count 2 and if high-availability is True then se min_count 1.
+  max_count: 4                                    
+  os_disk_size: 128
+
+vectordb_nodes:
+  instance_type: c2-standard-4                             #Default
+  min_count: 1                                          #minimum 1 recommended
+  max_count: 4
+  os_disk_size: 128  
+  
+deployment_nodes:
+  instance_type: c2-standard-8                    #Default
+  min_count: 1                                    #Minimum recommended 1
+  max_count: 4
+  os_disk_size: 128
+
+#GPU
+gpu_enabled: False                                #It is mandatory to set enable_gpu_workspace to True when you want to use GPU Workspaces
+gpu_nodes:
+  instance_type: n1-standard-1                    #Update instance as per your usage.
+  gpu_machine_type: nvidia-tesla-p4
+  gpu_type: "p4"                                  #Enter the type of GPU available on machine. eg. v100,k80,a100,a10g,p4,p100,l4,t4.
+  gpu_count: 2
+  min_count: 1                                    #minimum 1 recommended if gpu_enabled: True
+  max_count: 4
+  os_disk_size: 512
